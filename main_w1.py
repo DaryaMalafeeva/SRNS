@@ -81,14 +81,14 @@ GLL_TIME             = str(int(year_GLL)) + str('.') + str(int(mounth_GLL)) + st
 str('  ') + str(int(hours_GLL)) + str(':') + str(int(minutes_GLL)) + str(':') + str(int(seconds_GLL))
 print('GALILEO time is ' + GLL_TIME)
 
-WN_GLL               = int(1024)
+WN_GLL               = int(700)
 TOW_5day_00_00_00    = int(172800)
 TOW_GLL              = int(TOW_5day_00_00_00 + (14 * 60 * 60) + (5 * 60))
 
 print('GST time is ' + str(WN_GLL) + str(':') + str(TOW_GLL))
 
 
-"""--------------SATELLITE COORDINATES AND VELOCITY CALCULATION------------"""
+"""---------------SATELLITE COORDINATES AND VELOCITY CALCULATION------------"""
 
 # интервал прогноза
 N_A     = 388 # номер недели внутри 4-х летнего периода относительно даты полуения альманаха
@@ -170,7 +170,6 @@ while abs(E_new - E) >= 10 ** -9:
 
 #  истинная аномалия v и аргумент широты НКА u
 v                     = 2 *  math.atan((((1 - alm.E) / (1 - alm.E)) ** 1/2) * math.tan(E_new /2))
-
 u                     = v + w_arg_per
 
 # координаты центра масс НКА в ECEF
@@ -180,6 +179,8 @@ r                     = p / (1 + alm.E * math.cos(v))
 x_ti                  = r * (math.cos(lam) * math.cos(u) - math.sin(lam) * math.sin(u) * math.cos(i))
 y_ti                  = r * (math.sin(lam) * math.cos(u) + math.cos(lam) * math.sin(u) * math.cos(i))
 z_ti                  = r * (math.sin(u) * math.sin(i))
+
+
 
 # проверка через высоту орбиты и радиус Земли
 R_ti                  = (((x_ti) ** 2) + ((y_ti) ** 2) + ((z_ti) ** 2)) ** (1./2)  
