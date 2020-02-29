@@ -91,7 +91,7 @@ print('GST time is ' + str(WN_GLL) + str(':') + str(TOW_GLL))
 """--------------SATELLITE COORDINATES AND VELOCITY CALCULATION------------"""
 
 # интервал прогноза
-N_A = 388 # номер недели внутри 4-х летнего периода относительно даты полуения альманаха
+N_A     = 388 # номер недели внутри 4-х летнего периода относительно даты полуения альманаха
 
 if N_t != 27:
     delta_N_A = N_t - N_A - round((N_t - N_A) / 1461) * 1461
@@ -101,47 +101,88 @@ elif N_4 == 27:
 delta_t_pr = float(delta_N_A ) * 86400 + (float(t) - alm.time_lambda)
 
 # количество целых витков на интервале прогноза
-T_sr = 43200 #[с] 
+T_sr                  = 43200 #[с] 
 
-W = int(delta_t_pr /(T_sr + alm.dT))
+W                     = int(delta_t_pr /(T_sr + alm.dT))
 
-# текущее наклонение (вопрос с домножением на пи)
-i_sr = 63 #[deg]
+# текущее наклонение
+i_sr                  = 63 #[deg]
 
-i = ((i_sr/180) + alm.dI) * math.pi
+i                     = ((i_sr/180) + alm.dI) * math.pi
 
 # сред. драконич. период на витке W+1 и сред. движение
-T_dr = T_sr + alm.dT + (2*W + 1) * alm.dTT
+T_dr                  = T_sr + alm.dT + (2*W + 1) * alm.dTT
 
-n = 2* math.pi / T_dr
+n                     = 2* math.pi / T_dr
 
 # большая полуось орбиты
-a_e  = 6378136
-J_2_0 = ((1082.62575) * (10 ** -6))
-GM = ((398600441) * (10 ** 6))
-T_osk = T_dr
-a_new = ((25400) * (10 ** 3.0))
-a = ((25400.1) * (10 ** 3.0))
+# в рассчитанном примере в икд болшая полуось орбиты на три знака меньше (но вроде у меня правильно 25 тыс км)
+a_e                   = 6378136 # [м]
 
-for i in range(100):
-    if abs(a_new - a) >= 0.001:
-        
-        a = a_new
-        
-        a_new = (((T_osk / (2 * math.pi)) ** 2) * GM) ** (1./3)
-        
-        p_new = a_new * (1 - (alm.E) ** 2)
-        
-        
-        znam_p1 = 3/2 * J_2_0 * (a_e / p_new) ** 2
-        
-        znam_p2 = (2 - 5/2 * math.sin(i) ** 2) \
-                  * ((1 - (alm.E) ** 2) ** 3./ 2) / (1 + alm.E * math.cos(alm.w * math.pi)) ** 2 \
-                  + ((1 + alm.E * math.cos(alm.w * math.pi)) ** 3) / (1 - (alm.E) ** 2)
-        
-        T_osk_new = (T_dr) / (1 - znam_p1 * znam_p2)
-        
-        T_osk = T_osk_new
-    else:
-        break    
+J_2_0                 = (1082.62575) * 10 ** -6
+ 
+GM                    = (398600441) * 10 ** 6
 
+T_osk_new             = T_dr
+
+a_new                 = 1
+
+a                     = 0
+
+while abs(a_new - a) >= 0.001:
+    a                 = a_new
+    
+    T_osk             = T_osk_new
+    
+    a_new             = ((((T_osk) / (2 * math.pi)) ** 2) * GM) ** (1./3)
+    
+    p_new             = a_new * (1 - ((alm.E) ** 2))
+    
+    znam_p1           = ((3/2) * J_2_0 * ((a_e) / (p_new))) ** 2
+    
+    znam_p2_1         = (2 - (5/2) * (math.sin(i) ** (2))) * \
+                        (((1 - (alm.E ** 2)) ** (3./2)) / ((1 + alm.E * math.cos(alm.w_a * math.pi)) ** 2))    
+    
+    znam_p2_2         = (((1 + alm.E * math.cos(alm.w_a * math.pi)) ** 3) / (1 - alm.E ** 2))
+    
+    T_osk_new         = (T_dr) / (1 - ((znam_p1) * ((znam_p2_1) + (znam_p2_2))))
+
+# текущее значение долготы восх. узла орбиты
+w_z                   = (7.2921150) * 10 ** -5 #[рад/с]
+lam                   = alm.lam_a * math.pi - (w_z + 3/2 *  J_2_0 * n * ((a_e / p_new) ** 2) * math.cos(i)) * delta_t_pr
+
+# текущее значение аргумента перигея 
+w_arg_per             = alm.w_a * math.pi - (3/4 * J_2_0 * n * ((a_e / p_new) ** 2) * (1 - 5 * math.cos(i) ** 2)) * delta_t_pr
+
+# значение средней долготы на момент прохождения текущего восходящего узла
+E_0                   = -2 * math.atan((((1 - alm.E) / (1 + alm.E)) ** 1/2)  * math.tan(w_arg_per /2))
+L_1                   = w_arg_per + E_0 - alm.E * math.sin(E_0)
+
+# текущее значение средней долготы НКА
+L                     = L_1 + n * (delta_t_pr - (T_sr + alm.dT) * W - alm.dTT * (W **2))
+
+# эксцентрическая аномалия
+E                     = L - w_arg_per
+E_new                 = E * 1.01
+while abs(E_new - E) >= 10 ** -9:
+    E                 = E_new
+    E_new             = L - w_arg_per + alm.E * math.sin(E)
+
+#  истинная аномалия v и аргумент широты НКА u
+v                     = 2 *  math.atan((((1 - alm.E) / (1 - alm.E)) ** 1/2) * math.tan(E_new /2))
+
+u                     = v + w_arg_per
+
+# координаты центра масс НКА в ECEF
+p                     = a_new * (1 - (alm.E ** 2))
+r                     = p / (1 + alm.E * math.cos(v))
+
+x_ti                  = r * (math.cos(lam) * math.cos(u) - math.sin(lam) * math.sin(u) * math.cos(i))
+y_ti                  = r * (math.sin(lam) * math.cos(u) + math.cos(lam) * math.sin(u) * math.cos(i))
+z_ti                  = r * (math.sin(u) * math.sin(i))
+
+# проверка через высоту орбиты и радиус Земли
+R_ti                  = (((x_ti) ** 2) + ((y_ti) ** 2) + ((z_ti) ** 2)) ** (1./2)  
+R_Earth            = (6400) * 10 ** 3 
+H_orbit             = R_ti - R_Earth
+print('Calculated orbit height is: ' + str(H_orbit) + ' meters')
