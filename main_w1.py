@@ -184,6 +184,6 @@ z_ti                  = r * (math.sin(u) * math.sin(i))
 
 # проверка через высоту орбиты и радиус Земли
 R_ti                  = (((x_ti) ** 2) + ((y_ti) ** 2) + ((z_ti) ** 2)) ** (1./2)  
-R_Earth            = (6400) * 10 ** 3 
+R_Earth            = (6371) * 10 ** 3 
 H_orbit             = R_ti - R_Earth
 print('Calculated orbit height is: ' + str(H_orbit) + ' meters')
