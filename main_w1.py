@@ -45,7 +45,7 @@ print('GLN time is ' + GLN_TIME)
 
 N_4                  = int(5) #for 2013
 N_t                  = int(366 * 1 + 22)
-t                    = int((14 * 60 * 60) + (5 * 60))
+t                    = int((17 * 60 * 60) + (5 * 60))
 
 print('GLONASST is ' + str(N_4) + str(':') + str(N_t) + str(':') + str(t))
 
@@ -143,9 +143,11 @@ while abs(a_new - a) >= 0.001:
     znam_p2_1         = (2 - (5/2) * (math.sin(i) ** (2))) * \
                         (((1 - (alm.E ** 2)) ** (3./2)) / ((1 + alm.E * math.cos(alm.w_a * math.pi)) ** 2))    
     
-    znam_p2_2         = (((1 + alm.E * math.cos(alm.w_a * math.pi)) ** 3) / (1 - alm.E ** 2))
+    znam_p2_2         = ((1 + alm.E * math.cos(alm.w_a * math.pi)) ** 3) / (1 - alm.E ** 2)
     
-    T_osk_new         = (T_dr) / (1 - ((znam_p1) * ((znam_p2_1) + (znam_p2_2))))
+    znam_p2           = znam_p2_1 + znam_p2_2
+    
+    T_osk_new         = (T_dr) / (1 - znam_p1 * znam_p2)
 
 # текущее значение долготы восх. узла орбиты
 w_z                   = (7.2921150) * 10 ** -5 #[рад/с]
@@ -180,10 +182,8 @@ x_ti                  = r * (math.cos(lam) * math.cos(u) - math.sin(lam) * math.
 y_ti                  = r * (math.sin(lam) * math.cos(u) + math.cos(lam) * math.sin(u) * math.cos(i))
 z_ti                  = r * (math.sin(u) * math.sin(i))
 
-
-
 # проверка через высоту орбиты и радиус Земли
 R_ti                  = (((x_ti) ** 2) + ((y_ti) ** 2) + ((z_ti) ** 2)) ** (1./2)  
-R_Earth            = (6371) * 10 ** 3 
+R_Earth               = (6371) * 10 ** 3 
 H_orbit             = R_ti - R_Earth
 print('Calculated orbit height is: ' + str(H_orbit) + ' meters')
