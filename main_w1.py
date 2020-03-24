@@ -63,18 +63,18 @@ print('GPS time is ' + GPS_TIME)
 
 WN_GPS               = int(1724)
 TOW_5day_00_00_00    = int(172800) # for Tuesday
-TOW_GPS              = int(TOW_5day_00_00_00 + (14 * 60 * 60) + (5 * 60))
+TOW_GPS              = int(TOW_5day_00_00_00 + (14 * 60 * 60) + (5 * 60) + 16)
 
 print('GPST time is ' + str(WN_GPS) + str(':') + str(TOW_GPS))
 
 # converting current UTC time to GALILEO system time
-leap_sec_corr_GLL    = 16 #for 2013
+leap_sec_corr_GLL    = 3 #for 2013
 year_GLL             = year_UTC
 mounth_GLL           = mounth_UTC
 day_GLL              = day_UTC
 hours_GLL            = hours_UTC + 0.0
 minutes_GLL          = minutes_UTC
-seconds_GLL          = seconds_UTC + leap_sec_corr_GPS
+seconds_GLL          = seconds_UTC + leap_sec_corr_GLL
 
 GLL_TIME             = str(int(year_GLL)) + str('.') + str(int(mounth_GLL)) + str('.') + str(int(day_GLL)) + \
 str('  ') + str(int(hours_GLL)) + str(':') + str(int(minutes_GLL)) + str(':') + str(int(seconds_GLL))
@@ -82,7 +82,7 @@ print('GALILEO time is ' + GLL_TIME)
 
 WN_GLL               = int(700)
 TOW_5day_00_00_00    = int(172800)
-TOW_GLL              = int(TOW_5day_00_00_00 + (14 * 60 * 60) + (5 * 60))
+TOW_GLL              = int(TOW_5day_00_00_00 + (14 * 60 * 60) + (5 * 60) + 3)
 
 print('GST time is ' + str(WN_GLL) + str(':') + str(TOW_GLL))
 
