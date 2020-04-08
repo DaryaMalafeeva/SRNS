@@ -60,19 +60,23 @@ for item in prn:
         prn_new.append(-1)
       
 # амплитудный спектр
-S   = np.fft.fft(np.array(prn_new))
-ss  = S * S.conj()
-akf = np.real(np.fft.ifft(ss))
+S          = np.fft.fft(np.array(prn_new))
+ss         = S * S.conj()
 
-akf2 = akf[::-1]
-akf2_short = np.delete(akf2,akf2[-1])
-
-akf_full = np.concatenate((akf2_short, akf))
+# акф
+akf        = np.real(np.fft.ifft(ss))
+akf2       = akf[::-1]
+akf2_short = np.delete(akf2,-1)
+akf_full   = np.concatenate((akf2_short, akf))
+samples    = np.arange(-10229, 10230, 1)
+A_max      = np.amax(abs(akf_full))
 
 # график АКФ
 fig = plt.figure(1)
-plt.plot(akf_full, '*')
-#plt.xlabel ('τ')
-#plt.ylabel('ρ(τ)')
+plt.plot(samples, akf_full,'r')
+plt.xlabel ('τ')
+plt.ylabel('ρ(τ)')
 plt.grid()
-plt.show()      
+plt.show()   
+
+   
