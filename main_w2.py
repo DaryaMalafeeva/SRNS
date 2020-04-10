@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 # начальное состояние первого регистра
 g_1   = [0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0] 
@@ -69,7 +70,6 @@ akf2       = akf[::-1]
 akf2_short = np.delete(akf2,-1)
 akf_full   = np.concatenate((akf2_short, akf))
 samples    = np.arange(-10229, 10230, 1)
-A_max      = np.amax(abs(akf_full))
 
 # график АКФ
 fig = plt.figure(1)
@@ -79,4 +79,10 @@ plt.ylabel('ρ(τ)')
 plt.grid()
 plt.show()   
 
-   
+# отношение макс. БЛ к главному лепестку
+A_peak = np.amax(abs(akf[1::]))
+L_peak = 10 * math.log10(A_peak / akf[0])
+
+# отношение СКО БЛ к главному лепестку
+A_std  = np.std(akf[1::])
+L_std  = 10 * math.log10(A_std / akf[0])
