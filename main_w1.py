@@ -81,7 +81,7 @@ print('GALILEO time is ' + GLL_TIME)
 
 WN_GLL               = int(700)
 TOW_5day_00_00_00    = int(172800)
-TOW_GLL              = int(TOW_5day_00_00_00 + (14 * 60 * 60) + (5 * 60) +13)
+TOW_GLL              = int(TOW_5day_00_00_00 + (14 * 60 * 60) + (5 * 60) + leap_sec_corr_GLL)
 
 print('GST time is ' + str(WN_GLL) + str(':') + str(TOW_GLL))
 
