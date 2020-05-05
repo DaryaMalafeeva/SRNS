@@ -17,7 +17,7 @@ mod_time = 20*1e-3        # время моделирования
 
 amount_k = mod_time / T_d # количество отсчетов
 
-"""---------------------------Дальномерные коды----=========----------------"""
+"""---------------------------Дальномерные коды-----------------------------"""
 # параметры дальномерных кодов
 T_dk   = 4 * 1e-3        # период ДК
 tau_dk = (1/1023) * 1e-3 # длительность элементарного символа ДК
@@ -33,3 +33,22 @@ G_E1_C_list_str  = list(format(int(read_codes.G_E1_C_16, 16), '4092b'))
 G_E1_C_list_int  = [int(x) for x in G_E1_C_list_str]
 G_E1_C_array     = np.array((G_E1_C_list_int))
 G_E1_C_full      = numpy.matlib.repmat(G_E1_C_array, 1, int(mod_time /T_dk))
+
+""""---------------------------Оверлейный код-------------------------------"""
+# параметры оверлейного кода
+T_ok   = 100 * 1e-3 # период ОК
+tau_ok = 4 * 1e-3   # длительность элементарного символа ОК
+
+G_OK_list_str  = list(format(int(read_codes.G_OK_16, 16), '028b'))
+del(G_OK_list_str[25::])
+G_OK_list_int  = [int(x) for x in G_OK_list_str]
+G_OK_array     = np.array((G_OK_list_int))
+
+# повторение элементов ДК на время моделирования
+if int(mod_time /T_ok) == 0:
+    num_of_repeat_ok = 1
+else:
+    num_of_repeat_ok = int(mod_time /T_ok)
+    
+G_OK_full      = numpy.matlib.repmat(G_OK_array, 1, num_of_repeat_ok)
+
