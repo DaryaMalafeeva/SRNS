@@ -2,7 +2,7 @@ import numpy as np
 import math
 import numpy.matlib
 import read_codes
-
+import matplotlib.pyplot as plt
 
 
 # функция преобразования модулирующей последовательности к виду +1,-1
@@ -15,11 +15,13 @@ def convert_val(mod_sequence, mod_sequence_new):
             mod_sequence_new.append(-1)
 
 
+
 """-------------------Параметры для моделирования---------------------------"""
 f_0      = 1575.42 * 1e6  # несущая частота
 A        = 1              # амплитуда каждой из компонент
 
-delta_f  = 24.552 * 1e6   # ширина полосы       
+#delta_f  = 24.552 * 1e6   # ширина полосы     
+delta_f  = 40.92 * 1e5  
 f_d      = 4 * delta_f    # частота дисретизации               
 T_d      = 1 / f_d        # период дискретизации                  
 f_if     = f_d / 4        # промежуточная частота                 
@@ -27,6 +29,7 @@ f_if     = f_d / 4        # промежуточная частота
 mod_time = 20*1e-3        # время моделирования
 
 amount_k = int(mod_time / T_d) # количество отсчетов
+
 
 """---------------------------Дальномерные коды-----------------------------"""
 # параметры дальномерных кодов
@@ -77,6 +80,7 @@ if int(mod_time /T_ok) == 0:
     num_of_repeat_ok = 1
 else:
     num_of_repeat_ok = int(mod_time /T_ok)
+    
 G_OK_full      = np.transpose(numpy.matlib.repmat(G_OK_array, 1, num_of_repeat_ok))
 G_OK           = np.repeat(G_OK_full, math.ceil(amount_k/ len(G_OK_full)))
 
@@ -111,16 +115,26 @@ R_sc_6 = 1 / T_sc_6      # частота sc6
 
 """-------------------Формирование поднесущих и сигнала---------------------"""
 amount_k_list = [i for i in range(0,amount_k)]
+S_E1_BC_list = []
 for k in amount_k_list:
     # формируем цифровые поднесущие
     sc_1 = np.sign(math.sin(2* math.pi * R_sc_1 * (k-1) * T_d))
     sc_6 = np.sign(math.sin(2* math.pi * R_sc_6 * (k-1) * T_d))
     
     # формируем сигнал
-    S_E1_BC = (A/(math.sqrt(2)))
+    pilot = G_E1_B[k] * G_nd[k] * (alpha * sc_1 + beta * sc_6)
+    
+    data  = G_E1_C[k] * G_OK[k] * (alpha * sc_1 + beta * sc_6)
+    
+    S_E1_BC = (A/(math.sqrt(2))) * (pilot - data) * (math.cos(2* math.pi * f_if * (k-1)) * T_d)
+    
+    S_E1_BC_list.append(S_E1_BC)
 
+    
 
-
-
-
-
+fig = plt.figure(1)
+plt.plot(amount_k_list, S_E1_BC_list,'r')
+plt.xlabel ('τ')
+plt.ylabel('ρ(τ)')
+plt.grid()
+plt.show() 
