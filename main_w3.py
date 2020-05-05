@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import numpy.matlib
 import read_codes
 
 
@@ -17,12 +18,18 @@ mod_time = 20*1e-3        # время моделирования
 amount_k = mod_time / T_d # количество отсчетов
 
 """---------------------------Дальномерные коды----=========----------------"""
+# параметры дальномерных кодов
+T_dk   = 4 * 1e-3        # период ДК
+tau_dk = (1/1023) * 1e-3 # длительность элементарного символа ДК
 
+# перевод в двоичную систему
 G_E1_B_list_str  = list(format(int(read_codes.G_E1_B_16, 16), '4092b'))
 G_E1_B_list_int  = [int(x) for x in G_E1_B_list_str]
 G_E1_B_array     = np.array((G_E1_B_list_int))
+# повторение элементов ДК на время моделирования
+G_E1_B_full      = numpy.matlib.repmat(G_E1_B_array, 1, int(mod_time /T_dk))
 
 G_E1_C_list_str  = list(format(int(read_codes.G_E1_C_16, 16), '4092b'))
 G_E1_C_list_int  = [int(x) for x in G_E1_C_list_str]
 G_E1_C_array     = np.array((G_E1_C_list_int))
-
+G_E1_C_full      = numpy.matlib.repmat(G_E1_C_array, 1, int(mod_time /T_dk))
