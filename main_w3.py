@@ -4,6 +4,17 @@ import numpy.matlib
 import read_codes
 
 
+
+# функция преобразования модулирующей последовательности к виду +1,-1
+def convert_val(mod_sequence, mod_sequence_new):
+#    mod_sequence_new = []
+    for item in mod_sequence:
+        if item == 0:
+            mod_sequence_new.append(1)
+        else:
+            mod_sequence_new.append(-1)
+
+
 """-------------------Параметры для моделирования---------------------------"""
 f_0      = 1575.42 * 1e6  # несущая частота
 A        = 1              # амплитуда каждой из компонент
@@ -25,7 +36,12 @@ tau_dk = (1/1023) * 1e-3 # длительность элементарного �
 # перевод в двоичную систему
 G_E1_B_list_str  = list(format(int(read_codes.G_E1_B_16, 16), '4092b'))
 G_E1_B_list_int  = [int(x) for x in G_E1_B_list_str]
-G_E1_B_array     = np.array((G_E1_B_list_int))
+
+# преобразуем к виду +1,-1
+G_E1_B_list_int_new = []
+convert_val(G_E1_B_list_int, G_E1_B_list_int_new)
+
+G_E1_B_array     = np.array((G_E1_B_list_int_new))
 # повторение элементов ДК на время моделирования
 G_E1_B_full      = np.transpose(numpy.matlib.repmat(G_E1_B_array, 1, int(mod_time /T_dk)))
 # согласовываем чипы последовательностей
@@ -34,10 +50,13 @@ G_E1_B           = np.repeat(G_E1_B_full, math.ceil(amount_k/ len(G_E1_B_full)))
 
 G_E1_C_list_str  = list(format(int(read_codes.G_E1_C_16, 16), '4092b'))
 G_E1_C_list_int  = [int(x) for x in G_E1_C_list_str]
+
+G_E1_C_list_int_new = []
+convert_val(G_E1_C_list_int, G_E1_C_list_int_new)
+
 G_E1_C_array     = np.transpose(np.array((G_E1_C_list_int)))
 G_E1_C_full      = np.transpose(np.matlib.repmat(G_E1_C_array,1, int(mod_time /T_dk)))
 G_E1_C           = np.repeat(G_E1_C_full, math.ceil(amount_k/ len(G_E1_C_full)))
-
 
 """"---------------------------Оверлейный код-------------------------------"""
 # параметры оверлейного кода
@@ -47,6 +66,10 @@ tau_ok           = 4 * 1e-3   # длительность элементарно�
 G_OK_list_str  = list(format(int(read_codes.G_OK_16, 16), '028b'))
 del(G_OK_list_str[25::])
 G_OK_list_int  = [int(x) for x in G_OK_list_str]
+
+G_OK_list_int_new = []
+convert_val(G_OK_list_int, G_OK_list_int_new)
+
 G_OK_array     = np.array((G_OK_list_int))
 
 # повторение элементов ДК на время моделирования
@@ -56,6 +79,23 @@ else:
     num_of_repeat_ok = int(mod_time /T_ok)
 G_OK_full      = np.transpose(numpy.matlib.repmat(G_OK_array, 1, num_of_repeat_ok))
 G_OK           = np.repeat(G_OK_full, math.ceil(amount_k/ len(G_OK_full)))
+
+"""-----------------------Навигационное сообщение---------------------------"""
+tau_nd = 4 * 1e-3        # длительность одного символа
+
+G_nd_list = []
+for j in range(int(mod_time / tau_nd)):
+    if j % 2 == 0: 
+        G_nd_list.append(1)
+    else:
+        G_nd_list.append(0)
+        
+G_nd_list_new = []
+convert_val(G_nd_list, G_nd_list_new)       
+        
+G_nd_array = np.array(G_nd_list)
+G_nd_array = np.reshape(G_nd_array ,(5,1))
+G_nd       = np.repeat(G_nd_array, math.ceil(amount_k/ len(G_nd_array)))
 
 """------------------------Цифровые поднесущие-----------------------------"""
 # параметры для формирования
@@ -69,33 +109,11 @@ T_sc_6 = (1/6138) *1e-6  # период sc6
 R_sc_6 = 1 / T_sc_6      # частота sc6
 
 
+"""-------------------Формирование поднесущих и сигнала---------------------"""
 amount_k_list = [i for i in range(0,amount_k)]
-
-"""-----------------------Навигационное сообщение---------------------------"""
-tau_nd = 4 * 1e-3        # длительность одного символа
-
-G_nd_list = []
-for j in range(int(mod_time / tau_nd)):
-    if j % 2 == 0: 
-        G_nd_list.append(1)
-    else:
-        G_nd_list.append(0)
-G_nd_array = np.array(G_nd_list)
-G_nd_array = np.reshape(G_nd_array ,(5,1))
-G_nd       = np.repeat(G_nd_array, math.ceil(amount_k/ len(G_nd_array)))
-
-
-# цикл для формирования поднесущих и сигнала
 for k in amount_k_list:
-    
-    # определяем номера битов для всех модулирующих последовательностей
-    
-    #N_chip_dk = np.fabs(np.array([math.floor(k/T_dk), len(G_E1_C_array)]))+ 1
-    
-    
     # формируем цифровые поднесущие
     sc_1 = np.sign(math.sin(2* math.pi * R_sc_1 * (k-1) * T_d))
-    
     sc_6 = np.sign(math.sin(2* math.pi * R_sc_6 * (k-1) * T_d))
     
     # формируем сигнал
