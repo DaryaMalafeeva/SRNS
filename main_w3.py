@@ -20,8 +20,7 @@ def convert_val(mod_sequence, mod_sequence_new):
 f_0      = 1575.42 * 1e6  # несущая частота
 A        = 1              # амплитуда каждой из компонент
 
-#delta_f  = 24.552 * 1e6   # ширина полосы     
-delta_f  = 40.92 * 1e5  
+delta_f  = 24.552 * 1e6   # ширина полосы     
 f_d      = 4 * delta_f    # частота дисретизации               
 T_d      = 1 / f_d        # период дискретизации                  
 f_if     = f_d / 4        # промежуточная частота                 
@@ -57,7 +56,7 @@ G_E1_C_list_int  = [int(x) for x in G_E1_C_list_str]
 G_E1_C_list_int_new = []
 convert_val(G_E1_C_list_int, G_E1_C_list_int_new)
 
-G_E1_C_array     = np.transpose(np.array((G_E1_C_list_int)))
+G_E1_C_array     = np.array((G_E1_C_list_int))
 G_E1_C_full      = np.transpose(np.matlib.repmat(G_E1_C_array,1, int(mod_time /T_dk)))
 G_E1_C           = np.repeat(G_E1_C_full, math.ceil(amount_k/ len(G_E1_C_full)))
 
@@ -106,35 +105,83 @@ G_nd       = np.repeat(G_nd_array, math.ceil(amount_k/ len(G_nd_array)))
 alpha = math.sqrt(10/11)
 beta  = math.sqrt(1/11)
 
-T_sc_1 = (1/1023) *1e-6  # период sc1
-R_sc_1 = 1 / T_sc_1      # частота sc1
 
-T_sc_6 = (1/6138) *1e-6  # период sc6
-R_sc_6 = 1 / T_sc_6      # частота sc6
+R_sc_1 = 1.023 * 1e6     # частота sc1
+R_sc_6 = 6.138 * 1e6     # частота sc6
 
 
 """-------------------Формирование поднесущих и сигнала---------------------"""
+
+# # фунция прямоугольника
+# def rect(x):
+#     if x == 0:
+#         return 1
+#     elif x <= tau_dk:
+#         return 0
+
+S_E1_BC_list  = []
+sc_1_list     = []
+sc_6_list     = []
+pilot_list    = []
+data_list     = []
+sc_list       = []
+
+s_e1_bc_list  = []
+
 amount_k_list = [i for i in range(0,amount_k)]
-S_E1_BC_list = []
 for k in amount_k_list:
+    
+ # e1_b = G_E1_B[k] * G_nd[k] * rect(k * T_d - T_dk)
+    
+ # e1_c = G_E1_B[k] * rect(k * T_d - T_dk)
+    
+ # sc_1 = np.sign(math.sin(2 * math.pi * R_sc_1) * k *T_d)
+    
+ # sc_6 = np.sign(math.sin(2 * math.pi * R_sc_6) * k *T_d)  
+ 
+ # s_e1_bc = (A/(math.sqrt(2)))  * e1_b * (alpha * sc_1 + beta * sc_6) -\
+ # e1_c * (alpha * sc_1 - beta * sc_6)
+  
+ # s_e1_bc_list.append(s_e1_bc)      
+    
+       
     # формируем цифровые поднесущие
-    sc_1 = np.sign(math.sin(2* math.pi * R_sc_1 * (k-1) * T_d))
-    sc_6 = np.sign(math.sin(2* math.pi * R_sc_6 * (k-1) * T_d))
+    sc_1 = np.sign(math.sin(2 * math.pi * R_sc_1 * k * T_d))
+    sc_1_list.append(sc_1)
     
+    sc_6 = np.sign(math.sin(2 * math.pi * R_sc_6 * k * T_d))
+    sc_6_list.append(sc_6)
+    
+    # для проверки правильности цпифровой поднесущей
+    sc = (alpha * sc_1) + (beta * sc_6) 
+    sc_list.append(sc)    
     # формируем сигнал
-    pilot = G_E1_B[k] * G_nd[k] * (alpha * sc_1 + beta * sc_6)
+    data = G_E1_B[k] * G_nd[k] * (alpha * sc_1 + beta * sc_6) 
     
-    data  = G_E1_C[k] * G_OK[k] * (alpha * sc_1 + beta * sc_6)
+    data_list.append(data)
     
-    S_E1_BC = (A/(math.sqrt(2))) * (pilot - data) * (math.cos(2* math.pi * f_if * (k-1)) * T_d)
+    pilot  = G_E1_C[k] * G_OK[k] * (alpha * sc_1 - beta * sc_6) 
+    pilot_list.append(pilot)
     
+    S_E1_BC = (A/(math.sqrt(2))) * (data - pilot) * (math.cos(2* math.pi * f_if * (k-1 * T_d)))
     S_E1_BC_list.append(S_E1_BC)
 
     
 
+"""------------------------------АКФ и графики------------------------------"""
+# цифровая поднесущая
 fig = plt.figure(1)
+plt.plot(amount_k_list, sc_list,'r')
+plt.xlabel ('k')
+plt.ylabel('s_c')
+plt.grid()
+plt.show() 
+
+
+
+fig = plt.figure(2)
 plt.plot(amount_k_list, S_E1_BC_list,'r')
-plt.xlabel ('τ')
-plt.ylabel('ρ(τ)')
+plt.xlabel ('k')
+plt.ylabel('S_E1_BC')
 plt.grid()
 plt.show() 
