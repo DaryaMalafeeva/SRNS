@@ -20,7 +20,7 @@ def convert_val(mod_sequence, mod_sequence_new):
 f_0      = 1575.42 * 1e6  # несущая частота
 A        = 1              # амплитуда каждой из компонент
 
-delta_f  = 24.552 * 1e6   # ширина полосы     
+delta_f  = 14.322 * 1e6   # ширина полосы     
 f_d      = 4 * delta_f    # частота дисретизации               
 T_d      = 1 / f_d        # период дискретизации                  
 f_if     = f_d / 4        # промежуточная частота                 
@@ -43,12 +43,6 @@ G_E1_B_list_int  = [int(x) for x in G_E1_B_list_str]
 G_E1_B_list_int_new = []
 convert_val(G_E1_B_list_int, G_E1_B_list_int_new)
 
-G_E1_B_array     = np.array((G_E1_B_list_int_new))
-# повторение элементов ДК на время моделирования (5 периодов ДК за 20 мс)
-G_E1_B_full      = np.transpose(numpy.matlib.repmat(G_E1_B_array, 1, int(mod_time /T_dk)))
-# согласовываем чипы последовательностей
-G_E1_B           = np.repeat(G_E1_B_full, math.ceil(amount_k/ len(G_E1_B_full)))
-
 
 G_E1_C_list_str  = list(format(int(read_codes.G_E1_C_16, 16), '04092b'))
 G_E1_C_list_int  = [int(x) for x in G_E1_C_list_str]
@@ -56,27 +50,21 @@ G_E1_C_list_int  = [int(x) for x in G_E1_C_list_str]
 G_E1_C_list_int_new = []
 convert_val(G_E1_C_list_int, G_E1_C_list_int_new)
 
-G_E1_C_array     = np.array((G_E1_C_list_int))
-G_E1_C_full      = np.transpose(np.matlib.repmat(G_E1_C_array,1, int(mod_time /T_dk)))
-G_E1_C           = np.repeat(G_E1_C_full, math.ceil(amount_k/ len(G_E1_C_full)))
 
 """"---------------------------Оверлейный код-------------------------------"""
 # параметры оверлейного кода
 T_ok             = 100 * 1e-3 # период ОК
 tau_ok           = 4 * 1e-3   # длительность элементарного символа ОК
 
-G_OK_list_str  = list(format(int(read_codes.G_OK_16, 16), '028b'))
+G_OK_list_str    = list(format(int(read_codes.G_OK_16, 16), '028b'))
 
-# за время 20 мс пройдет 5 бит ОК, тогда нам надо их достать и растянуть
+# за время 20 мс пройдет 5 бит ОК
 del(G_OK_list_str[5::])
 G_OK_list_int  = [int(x) for x in G_OK_list_str]
 
 G_OK_list_int_new = []
 convert_val(G_OK_list_int, G_OK_list_int_new)
 
-G_OK_array     = np.array((G_OK_list_int))
-G_OK_full      = np.transpose(G_OK_array)
-G_OK           = np.repeat(G_OK_full, math.ceil(amount_k/ len(G_OK_full)))
 
 """-----------------------Навигационное сообщение---------------------------"""
 tau_nd = 4 * 1e-3        # длительность одного символа
@@ -91,8 +79,6 @@ for j in range(int(mod_time / tau_nd)):
 G_nd_list_new = []
 convert_val(G_nd_list, G_nd_list_new)       
         
-G_nd_array = np.array(G_nd_list)
-G_nd       = np.repeat(G_nd_array, math.ceil(amount_k/ len(G_nd_array)))
 
 """------------------------Цифровые поднесущие-----------------------------"""
 # параметры для формирования
@@ -105,13 +91,6 @@ R_sc_6 = 6.138 * 1e6     # частота sc6
 
 """-------------------Формирование поднесущих и сигнала---------------------"""
 
-# # фунция прямоугольника
-# def rect(x):
-#     if x == 0:
-#         return 1
-#     elif x <= tau_dk:
-#         return 0
-
 S_E1_BC_list  = []
 sc_1_list     = []
 sc_6_list     = []
@@ -123,23 +102,44 @@ sc_minus_list = []
 
 s_e1_bc_list  = []
 
-amount_k_list = [i for i in range(0,amount_k)]
-for k in amount_k_list:
+DKout_B_list  = []
+
+DKout_C_list  = []
+
+OKout_list    = []
+
+NDout_list    = []
+
+k = 0
+t = 0
+f = 0
+N = round(f_d * mod_time)
+tout = []
+fout = []
+
+while t < mod_time:
     
- # e1_b = G_E1_B[k] * G_nd[k] * rect(k * T_d - T_dk)
     
- # e1_c = G_E1_B[k] * rect(k * T_d - T_dk)
     
- # sc_1 = np.sign(math.sin(2 * math.pi * R_sc_1) * k *T_d)
+    # ДК
+    Nchip_dk_B = int(abs((t/tau_dk) % len(G_E1_B_list_int_new))) 
+    DKout_B = G_E1_B_list_int_new[Nchip_dk_B]
+    DKout_B_list.append(DKout_B)
     
- # sc_6 = np.sign(math.sin(2 * math.pi * R_sc_6) * k *T_d)  
- 
- # s_e1_bc = (A/(math.sqrt(2)))  * e1_b * (alpha * sc_1 + beta * sc_6) -\
- # e1_c * (alpha * sc_1 - beta * sc_6)
-  
- # s_e1_bc_list.append(s_e1_bc)      
+    Nchip_dk_C = int(abs((t/tau_dk) % len(G_E1_C_list_int_new))) 
+    DKout_C = G_E1_C_list_int_new[Nchip_dk_C]
+    DKout_C_list.append(DKout_C)
     
-       
+    # ОК
+    Nchip_ok = int(abs((t/tau_ok) % len(G_OK_list_int_new))) 
+    OKout = G_OK_list_int_new[Nchip_ok]
+    OKout_list.append(OKout)
+    
+    # НС
+    Nchip_nd = int(abs((t/tau_nd) % len(G_nd_list_new))) 
+    NDout = G_nd_list_new[Nchip_nd]
+    NDout_list.append(NDout)
+    
     # формируем цифровые поднесущие
     sc_1 = np.sign(math.sin(2 * math.pi * R_sc_1 * k * T_d))
     sc_1_list.append(sc_1)
@@ -156,62 +156,90 @@ for k in amount_k_list:
     
     
     # формируем сигнал
-    data = G_E1_B[k] * G_nd[k] * sc_plus
+    data = DKout_B * NDout * sc_plus
     data_list.append(data)
     
-    pilot  = G_E1_C[k] * G_OK[k] * sc_minus
+    pilot  = DKout_C * OKout * sc_minus
     pilot_list.append(pilot)
     
     S_E1_BC = (A/(math.sqrt(2))) * (data - pilot) * (math.cos(2* math.pi * f_if * k * T_d))
     S_E1_BC_list.append(S_E1_BC)
-
+    
+    t = k * T_d
+    tout.append(t)
+    
+    f += 1/mod_time
+    fout.append(f)
+    
+    k +=1
 
 """------------------------------АКФ и графики------------------------------"""
 
 
-# амплитудный спектр
+# амплитудный спектр всего сигнала
 S   = np.fft.fft(np.array(S_E1_BC_list))
 ss  = S * S.conj()
+ss.transpose
 
 # график энергетического спектра
 fig = plt.figure(6)
-plt.plot (ss,'r')
+plt.plot (fout, ss,'r')
 plt.grid()
 plt.show()   
 
-# акф
+
+
+# акф всего сигнала
 akf        = np.real(np.fft.ifft(ss))
 akf2       = akf[::-1]
 akf2_short = np.delete(akf2,-1)
 akf_full   = np.concatenate((akf2_short, akf))
 #samples    = np.arange(-10229, 10230, 1)
 
-# график АКФ
+# график АКФ всего сигнала
 fig = plt.figure(4)
-plt.plot (akf_full,'r')
+plt.plot (akf,'r')
+plt.xlabel ('k')
+plt.ylabel('АКФ S_E1_BC_list')
 plt.grid()
 plt.show()   
 
-# цифровая поднесущая
-fig = plt.figure(1)
-plt.plot(amount_k_list, sc_plus_list,'r')
+# амплитудный спектр ДК (B)
+S_dk   = np.fft.fft(DKout_C_list)
+ss_dk  = S_dk * S_dk.conj()
+
+# акф ДК
+akf_dk        = np.real(np.fft.ifft(ss_dk))
+akf2_dk       = akf_dk[::-1]
+akf2_short_dk = np.delete(akf2_dk,-1)
+akf_full_dk   = np.concatenate((akf2_short_dk, akf_dk))
+#samples    = np.arange(-10229, 10230, 1)
+
+# график АКФ ДК
+fig = plt.figure(7)
+plt.plot (akf_full_dk,'r')
 plt.xlabel ('k')
-plt.ylabel('s_c_plus')
+plt.ylabel('АКФ akf_full_dk')
+plt.grid()
+plt.show()  
+
+
+# цифровая поднесущая
+fig = plt.figure(1) 
+plt.plot(sc_plus_list,'r')
 plt.grid()
 plt.show() 
 
 # цифровая поднесущая
 fig = plt.figure(2)
-plt.plot(amount_k_list, sc_minus_list,'r')
-plt.xlabel ('k')
-plt.ylabel('s_c_minus')
+plt.plot(sc_minus_list,'r')
+
 plt.grid()
 plt.show() 
 
-
+# сигнал
 fig = plt.figure(3)
-plt.plot(amount_k_list,G_OK,'r')
-plt.xlabel ('k')
-plt.ylabel('S_E1_BC')
+plt.plot(S_E1_BC_list,'r')
 plt.grid()
 plt.show() 
+
