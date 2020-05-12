@@ -96,29 +96,21 @@ sc_1_list     = []
 sc_6_list     = []
 pilot_list    = []
 data_list     = []
-
 sc_plus_list  = []
 sc_minus_list = []
-
 s_e1_bc_list  = []
-
 DKout_B_list  = []
-
 DKout_C_list  = []
-
 OKout_list    = []
-
 NDout_list    = []
-
-k = 0
-t = 0
-f = 0
-N = round(f_d * mod_time)
-tout = []
-fout = []
+tout          = []
+fout          = []
+k             = 0
+t             = 0
+f             = 0
+N             = round(f_d * mod_time)
 
 while t < mod_time:
-    
     
     
     # ДК
@@ -171,69 +163,92 @@ while t < mod_time:
     f += 1/mod_time
     fout.append(f)
     
-    k +=1
+    # индексация с нуля - поэтому инкрементируем в конце цикла( в нулевой момент все параметры 0)
+    k +=1 
 
 """------------------------------АКФ и графики------------------------------"""
 
 
 # амплитудный спектр всего сигнала
-S   = np.fft.fft(np.array(S_E1_BC_list))
-ss  = S * S.conj()
-ss.transpose
+S                = np.fft.fft(np.array(S_E1_BC_list))
+ss               = np.real(S * S.conj())
+ss_list          = ss.tolist()
 
-# график энергетического спектра
-fig = plt.figure(6)
-plt.plot (fout, ss,'r')
+ss_short         = ss_list[0:int(len(ss_list)/2)]
+fout_short       = fout[0:int(len(ss_short)/2)]
+fout_short_minus = []
+for i in fout_short:
+    fout_short_minus.append((-1) * i)
+fout_short_minus.reverse()
+fout_final = fout_short_minus + fout_short
+
+# эта операция занимает слишком много времени (я не смогла дождаться)
+# попытка обойтись без цикла не удалась
+# - не применяется операция деления всего списка сразу на число
+# # для расчета спектра в дБ придется обрабатывать каждый отсчет сигнала отдельно
+
+#phys_spectr_signal_dB_list = []
+# for elem in ss_short:
+#     phys_spectr_signal_dB = 10 * math.log10(elem/max(ss_short))
+#     phys_spectr_signal_dB_list.append(phys_spectr_signal_dB)
+
+# график энергетического спектра (половина)
+# при большом желании можно попробовать дождаться расчета в дБ
+fig = plt.figure(1)
+plt.plot (fout_final, ss_short,'r')
+plt.title('Энергетический спектр сигнала Galileo E1B/C')
+plt.xlabel ('f, МГц')
+plt.ylabel('S(f)')
 plt.grid()
 plt.show()   
 
 
-
-# акф всего сигнала
+# АКФ всего сигнала
 akf        = np.real(np.fft.ifft(ss))
 akf2       = akf[::-1]
 akf2_short = np.delete(akf2,-1)
 akf_full   = np.concatenate((akf2_short, akf))
-#samples    = np.arange(-10229, 10230, 1)
+
+# нормируем на макс значение
+# очень долго!
+# akf_norm = []
+# for akf_point in akf_full:
+#     if akf_point < max(akf_full):
+#         akf_norm.append(akf_point / max(akf_full))
+    
+tout_minus = []
+for j in tout[1::]:
+    tout_minus.append((-1) * j)
+tout_minus.reverse()
+tout_full = tout_minus + tout
 
 # график АКФ всего сигнала
-fig = plt.figure(4)
-plt.plot (akf,'r')
-plt.xlabel ('k')
-plt.ylabel('АКФ S_E1_BC_list')
+fig = plt.figure(2)
+plt.plot (tout_full, akf_full,'r')
+plt.title('АКФ сигнала Galileo E1B/C')
+plt.xlabel ('τ, с')
+plt.ylabel('ρ(τ)')
 plt.grid()
 plt.show()   
 
-# амплитудный спектр ДК (B)
-S_dk   = np.fft.fft(DKout_C_list)
-ss_dk  = S_dk * S_dk.conj()
-
-# акф ДК
-akf_dk        = np.real(np.fft.ifft(ss_dk))
-akf2_dk       = akf_dk[::-1]
-akf2_short_dk = np.delete(akf2_dk,-1)
-akf_full_dk   = np.concatenate((akf2_short_dk, akf_dk))
-#samples    = np.arange(-10229, 10230, 1)
-
-# график АКФ ДК
-fig = plt.figure(7)
-plt.plot (akf_full_dk,'r')
-plt.xlabel ('k')
-plt.ylabel('АКФ akf_full_dk')
-plt.grid()
-plt.show()  
+# создадим массив отсчетов времени в мс
+tout_ms = [1e-3*x for x in tout[:]]
 
 
 # цифровая поднесущая
-fig = plt.figure(1) 
-plt.plot(sc_plus_list,'r')
+fig = plt.figure(6) 
+plt.subplot(2,1,1)
+plt.plot(tout_ms, sc_plus_list,'r')
+plt.title('Цифровые поднесущие сигнала Galileo E1B/C')
+plt.xlabel ('t, мс')
+plt.ylabel('sc_plus(t)')
 plt.grid()
 plt.show() 
 
-# цифровая поднесущая
-fig = plt.figure(2)
-plt.plot(sc_minus_list,'r')
-
+plt.subplot(2,1,2)
+plt.plot(tout * 1e-3, sc_minus_list,'r')
+plt.xlabel ('t,мс')
+plt.ylabel('sc_minus(t)')
 plt.grid()
 plt.show() 
 
