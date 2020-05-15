@@ -166,6 +166,25 @@ while t < mod_time:
     # индексация с нуля - поэтому инкрементируем в конце цикла( в нулевой момент все параметры 0)
     k +=1 
 
+
+
+"""----------------Проверка ДК после передискретизации---------------------"""
+# функция преобразования модулирующей последовательности к виду 0,1
+def convert_val_reverse(mod_sequence, mod_sequence_new):
+    for item in mod_sequence:
+        if item == 1:
+            mod_sequence_new.append(0)
+        else:
+            mod_sequence_new.append(1)
+
+G_E1_B_list_reversed = []
+convert_val_reverse(DKout_B_list, G_E1_B_list_reversed)
+
+G_E1_C_list_reversed = []
+convert_val_reverse(DKout_C_list, G_E1_C_list_reversed)
+
+
+
 """------------------------------АКФ и графики------------------------------"""
 
 
@@ -182,18 +201,20 @@ for i in fout_short:
 fout_short_minus.reverse()
 fout_final = fout_short_minus + fout_short
 
-# эта операция занимает слишком много времени (я не смогла дождаться)
-# попытка обойтись без цикла не удалась
-# - не применяется операция деления всего списка сразу на число
-# # для расчета спектра в дБ придется обрабатывать каждый отсчет сигнала отдельно
 
-#phys_spectr_signal_dB_list = []
-# for elem in ss_short:
-#     phys_spectr_signal_dB = 10 * math.log10(elem/max(ss_short))
-#     phys_spectr_signal_dB_list.append(phys_spectr_signal_dB)
 
-# график энергетического спектра (половина)
-# при большом желании можно попробовать дождаться расчета в дБ
+ss_array = np.array(ss_list)
+phys_spectr_signal_dB = 10 * np.log10(ss_array /max(ss_array))
+
+fig = plt.figure(11)
+plt.plot (fout, phys_spectr_signal_dB,'r')
+plt.title('Энергетический спектр сигнала Galileo E1B/C')
+plt.xlabel ('f, Гц')
+plt.ylabel('S(f), дБВт/Гц')
+plt.grid()
+plt.show()   
+
+
 fig = plt.figure(1)
 plt.plot (fout_final, ss_short,'r')
 plt.title('Энергетический спектр сигнала Galileo E1B/C')
@@ -231,30 +252,79 @@ plt.ylabel('ρ(τ)')
 plt.grid()
 plt.show()   
 
-# создадим массив отсчетов времени в мс
-tout_ms = [1e-3*x for x in tout[:]]
+# создадим массив нормированных к периоду цифровых поднесущих отсчетов времени
+tout_sc1 = [R_sc_1 * x for x in tout[:]]
 
 
 # цифровая поднесущая
-fig = plt.figure(6) 
+fig = plt.figure(3) 
 plt.subplot(2,1,1)
-plt.plot(tout_ms, sc_plus_list,'r')
+plt.plot(tout_sc1, sc_plus_list,'r')
 plt.title('Цифровые поднесущие сигнала Galileo E1B/C')
-plt.xlabel ('t, мс')
+plt.xlabel ('t, t/T_sc_1')
 plt.ylabel('sc_plus(t)')
 plt.grid()
 plt.show() 
 
 plt.subplot(2,1,2)
-plt.plot(tout * 1e-3, sc_minus_list,'r')
-plt.xlabel ('t,мс')
+plt.plot(tout_sc1, sc_minus_list,'r')
+plt.xlabel ('t, t/T_sc_1')
 plt.ylabel('sc_minus(t)')
 plt.grid()
 plt.show() 
 
+
+signal_time = (5 * tau_dk)
+signal_time_list = []
+
+for time_point in tout:
+    if time_point<= signal_time:
+        signal_time_list.append(time_point)
+
+S_E1_BC_list_5b_dk = S_E1_BC_list[0:len(signal_time_list)]
+
 # сигнал
-fig = plt.figure(3)
-plt.plot(S_E1_BC_list,'r')
+fig = plt.figure(4)
+plt.plot(signal_time_list, S_E1_BC_list_5b_dk,'r')
+plt.title('Сигнал Galileo E1B/C')
+plt.xlabel ('t, с')
+plt.ylabel(' S(t)')
 plt.grid()
 plt.show() 
 
+
+# ДК
+fig = plt.figure(5)
+plt.subplot(2,1,1)
+plt.plot(tout, DKout_B_list,'r')
+plt.title('ДК Galileo E1B/C (B)')
+plt.xlabel ('t, с')
+plt.ylabel(' G_ DK_B(t)')
+plt.grid()
+plt.show() 
+
+plt.subplot(2,1,2)
+plt.plot(tout, DKout_C_list,'r')
+plt.title('ДК сигнала Galileo E1B/C (C)')
+plt.xlabel ('t, с')
+plt.ylabel(' G_DK_C(t)')
+plt.grid()
+plt.show() 
+
+# ОК
+fig = plt.figure(6)
+plt.plot(tout, OKout_list,'r')
+plt.title('ОК сигнала Galileo E1B/C')
+plt.xlabel ('t, с')
+plt.ylabel('G_OK_C(t)')
+plt.grid()
+plt.show() 
+
+# НД
+fig = plt.figure(7)
+plt.plot(tout, NDout_list,'r')
+plt.title('Навигационное сообщение')
+plt.xlabel ('t, с')
+plt.ylabel('G_nd(t)')
+plt.grid()
+plt.show() 
