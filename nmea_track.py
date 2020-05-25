@@ -9,6 +9,9 @@ Created on Fri May 15 15:03:07 2020
 import codecs
 import math
 import ddmm2rad
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib as mpl
 
 line_list      = []
 lattitude_list = []
@@ -29,16 +32,18 @@ with codecs.open("/Users/daryamalafeeva/Desktop/SN_6703/rgfile_20191008_122907.t
 #            get_latitude_ns = str_massive[3]
 #            if get_latitude_ns == 'N':
             lattitude_list.append(lat)
- #           elif get_latitude_ns == 'S':
+#           elif get_latitude_ns == 'S':
             longitude_list.append(lon)
             height_list.append(get_height)
                 
-
-
+            
 # построение трека НМ
 
+fig_1 = plt.figure(1)
+ax    = fig_1.add_subplot(projection=f'3d')
+ax.plot(lattitude_list, longitude_list, height_list, '*-', color = 'darkblue')
 
-
-
-
-
+ax.set_xlabel('Широта')
+ax.set_ylabel('Долгота')
+ax.set_zlabel('Высота антенны над уровнем моря')
+plt.show()
