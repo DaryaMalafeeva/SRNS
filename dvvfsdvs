@@ -1,0 +1,103 @@
+import functions2use
+import codecs
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib as mpl
+from mpl_toolkits import mplot3d
+
+import pickle
+import io
+
+
+line_list      = []
+lattitude_list = []
+longitude_list = []
+height_list    = []
+
+x_ecef_list    = []
+y_ecef_list    = []
+z_ecef_list    = []
+
+
+with codecs.open("/Users/daryamalafeeva/Desktop/SN_6703/rgfile_20191008_122907.txt", "r",encoding='utf-8', errors='ignore') as NMEA_log:
+    for line in NMEA_log:
+#        if line.startswith('$PORZX'):
+#           str_massive_porzx     = line.split(',')
+        if line.startswith('$GNGGA') or line.startswith('$GPGGA') or\
+           line.startswith('$GLGGA') or line.startswith('$GAGGA'):
+            str_massive     = line.split(',')
+            get_latitude    = float(str_massive[2])
+            get_longitude   = float(str_massive[4])
+            get_height      = float(str_massive[9])
+            
+            # преобразуем формат ddmm в радианны
+            lat = functions2use.ddmm2rad(get_latitude)
+            lon = functions2use.ddmm2rad(get_longitude)
+            
+            # WGS-84 to ECEF
+            ecef = functions2use.wgs84_2ecef(lat, lon, get_height)            
+            x_ecef = ecef[0]
+            x_ecef_list.append(x_ecef)
+           
+            y_ecef = ecef[1]
+            y_ecef_list.append(y_ecef)
+            
+            z_ecef = ecef[2]
+            z_ecef_list.append(z_ecef)
+            
+#            get_latitude_ns = str_massive[3]
+#            if get_latitude_ns == 'N':
+            lattitude_list.append(lat)
+#           elif get_latitude_ns == 'S':
+            longitude_list.append(lon)
+            height_list.append(get_height)
+            
+# построение трека НМ
+# fig_1 = plt.figure(1)
+# ax    = fig_1.add_subplot(projection=f'3d')
+# ax.plot(x_ecef_list, y_ecef_list, z_ecef_list, '*-', color = 'darkblue')
+
+# ax.set_xlabel('X, м')
+# ax.set_ylabel('Y, м')
+# ax.set_zlabel('Z, м')
+# plt.show()
+            
+# u, v = np.mgrid[0 : 2*np.pi :20j, 0 : np.pi : 10j]
+# x = 6371*1e3 *(np.cos(u)*np.sin(v))
+# y = 6371*1e3 *(np.sin(u)*np.sin(v))
+# z = 6371*1e3 *(np.cos(v))
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection='3d')
+# #ax.plot_wireframe(x, y, z, color = 'lime')
+# ax.plot(x_ecef_list, y_ecef_list, z_ecef_list, '*-', color = 'darkblue')
+# ax.set_xlabel('X, м')
+# ax.set_ylabel('Y, м')
+# ax.set_zlabel('Z, м')
+
+
+"""------------------Работа с лог-файлом пакета F9h BINR--------------------"""
+
+binr_file_list = []
+
+with open("/Users/daryamalafeeva/Desktop/SN_6703/filelog.txt", "rb") as BINR_log:
+    binr_bytes = BINR_log.read()
+
+# кладем все элементы binr файла в список
+    for byte in binr_bytes:
+        binr_file_list.append(hex(byte))
+     
+
+# поиск начала и конца предложения       
+ind_start_list = []
+ind_stop_list  = []
+
+for i,binr_file_list[i] in enumerate(binr_file_list):
+    if binr_file_list[i] == hex(0x10) and binr_file_list[i+1] != hex(0x03):
+        ind_start_list.append(i)
+    elif binr_file_list[i] == hex(0x10) and binr_file_list[i+1] == hex(0x03):
+        ind_stop_list.append(i+1)
+
+# кладем все что между началом и концом предложения в отдельные элементы списка
+ sent_list
