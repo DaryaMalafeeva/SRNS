@@ -91,6 +91,11 @@ ind_list_stop  = [] # список из индексов конца предло
 lst_byte       = [] # список списков (весь файл  по предложениям)
 
 for i,binr_file_list[i] in enumerate(binr_file_list):
+    
+    if binr_file_list[i] == hex(0x10) and binr_file_list[i+1] == hex(0x10):       
+        binr_file_list.remove(binr_file_list[i])
+    
+    
     if binr_file_list[i] == hex(0x10) and binr_file_list[i+1] != hex(0x03) \
         and binr_file_list[i+1] != hex(0x10):
         ind_list_start.append(i)
@@ -98,12 +103,25 @@ for i,binr_file_list[i] in enumerate(binr_file_list):
         
     if binr_file_list[i] == hex(0x10) and binr_file_list[i+1] == hex(0x03):
         ind_list_stop.append(i+1)
-        ind_stop = i+1
+        ind_stop = i+2
         lst_byte.append(binr_file_list[ind_start:ind_stop])
     
     
-     
-for bytes_stroke in lst_byte:
+lat_binr9h_list    = []
+lon_binr9h_list    = []
+height_binr9h_list = []
     
+for byte_stroke in lst_byte:
         
+    lat_binr9h    = [int(x,16) for x in byte_stroke[6:14]]
+    lat_binr9h_list.append(lat_binr9h)  
+    
+    lon_binr9h    = [int(x,16) for x in byte_stroke[14:22]]
+    lon_binr9h_list.append(lon_binr9h)
+    
+    height_binr9h = [int(x,16) for x in byte_stroke[22:30]]
+    height_binr9h_list.append(height_binr9h)
+    
 
+
+        
