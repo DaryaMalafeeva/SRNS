@@ -6,9 +6,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib as mpl
 from mpl_toolkits import mplot3d
-
-import pickle
-import io
+import numpy as np
 
 
 line_list      = []
@@ -79,25 +77,33 @@ with codecs.open("/Users/daryamalafeeva/Desktop/SN_6703/rgfile_20191008_122907.t
 
 """------------------Работа с лог-файлом пакета F9h BINR--------------------"""
 
-binr_file_list = []
+binr_file_list = [] # список файла где элемент - один байт
 
 with open("/Users/daryamalafeeva/Desktop/SN_6703/filelog.txt", "rb") as BINR_log:
     binr_bytes = BINR_log.read()
-
 # кладем все элементы binr файла в список
     for byte in binr_bytes:
         binr_file_list.append(hex(byte))
      
-
-# поиск начала и конца предложения       
-ind_start_list = []
-ind_stop_list  = []
+        
+ind_list_start = [] # список из индексов начала предложения
+ind_list_stop  = [] # список из индексов конца предложения
+lst_byte       = [] # список списков (весь файл  по предложениям)
 
 for i,binr_file_list[i] in enumerate(binr_file_list):
-    if binr_file_list[i] == hex(0x10) and binr_file_list[i+1] != hex(0x03):
-        ind_start_list.append(i)
-    elif binr_file_list[i] == hex(0x10) and binr_file_list[i+1] == hex(0x03):
-        ind_stop_list.append(i+1)
+    if binr_file_list[i] == hex(0x10) and binr_file_list[i+1] != hex(0x03) \
+        and binr_file_list[i+1] != hex(0x10):
+        ind_list_start.append(i)
+        ind_start = i
+        
+    if binr_file_list[i] == hex(0x10) and binr_file_list[i+1] == hex(0x03):
+        ind_list_stop.append(i+1)
+        ind_stop = i+1
+        lst_byte.append(binr_file_list[ind_start:ind_stop])
+    
+    
+     
+for bytes_stroke in lst_byte:
+    
+        
 
-# кладем все что между началом и концом предложения в отдельные элементы списка
- sent_list
