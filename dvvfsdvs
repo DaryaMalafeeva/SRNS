@@ -110,11 +110,15 @@ for i,binr_file_list[i] in enumerate(binr_file_list):
 lat_binr9h_list    = []
 lon_binr9h_list    = []
 height_binr9h_list = []
+
+
+
     
 for byte_stroke in lst_byte:
         
-    lat_binr9h    = [int(x,16) for x in byte_stroke[6:14]]
-    lat_binr9h_list.append(lat_binr9h)  
+    lat_binr9h     = [(format(int(x,16),'010b'))[2:] for x in byte_stroke[6:14]] 
+    lat_binr9h_str = ''.join(lat_binr9h)
+    lat_binr9h_list.append(lat_binr9h_str)  
     
     lon_binr9h    = [int(x,16) for x in byte_stroke[14:22]]
     lon_binr9h_list.append(lon_binr9h)
